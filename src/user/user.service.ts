@@ -4,6 +4,7 @@ import { Model, Types } from 'mongoose';
 import { User, UserDocument } from './user.schema';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -12,6 +13,10 @@ export class UserService {
   ) {}
 
   async create(dto: CreateUserDto) {
+    if (dto.password) {
+      const saltRounds = 10;
+      dto.password = await bcrypt.hash(dto.password, saltRounds);
+    }
     return this.userModel.create(dto);
   }
 
@@ -45,5 +50,9 @@ export class UserService {
 
   async findByEmail(email: string) {
     return this.userModel.findOne({ email }).lean();
+  }
+
+  async findByEmailWithPassword(email: string) {
+    return this.userModel.findOne({ email }).select('+password').lean();
   }
 }
